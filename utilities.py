@@ -31,11 +31,11 @@ def choose_action(q_table, s, eps):
 def decay_function(ep):
     if (ep <= 100):
         return 0.5
-    elif (ep > 100 and ep <= 200  ):
+    elif (ep > 100 and ep <= 300  ):
         return 0.2
-    elif (ep > 200 and ep <= 300  ):
+    elif (ep > 300 and ep <= 500  ):
         return 0.1
-    elif (ep > 300 and ep <= 400  ):
+    elif (ep > 500 and ep <= 700  ):
         return 0.01
     else:
         return 0.0
