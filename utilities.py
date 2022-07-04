@@ -10,8 +10,8 @@ env = gym.make("LunarLander-v2")
 actions = [0,1,2,3]
 
 def discretize_states(state):
-    discrete_state = (min(2, max(-2, int((state[0]) / 0.05))), \
-                        min(2, max(-2, int((state[1]) / 0.1))), \
+    discrete_state = (min(5, max(-5, int((state[0]) / 0.05))), \
+                        min(5, max(-5, int((state[1]) / 0.1))), \
                         min(2, max(-2, int((state[2]) / 0.1))), \
                         min(2, max(-2, int((state[3]) / 0.1))), \
                         min(2, max(-2, int((state[4]) / 0.1))), \

@@ -16,7 +16,7 @@ def random_agent(episodes, render=False):
             tot_rew += reward
             if render:
                 env.render()
-        rew_list.append(reward)
+        rew_list.append(tot_rew)
 
     env.close()
 
