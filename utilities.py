@@ -39,3 +39,22 @@ def decay_function(ep):
         return 0.01
     else:
         return 0.0
+
+def discretize_space(min_lim, min_centre, max_centre, max_lim, n_discrete_values):
+    space = np.zeros((n_discrete_values))
+    space[1:n_discrete_values-1] = np.linspace(min_centre, max_centre, n_discrete_values-2)
+    space[0] = min_lim
+    space[-1] = max_lim
+    return space
+
+def plot_space(discrete_space):
+    _ = [plt.plot([x, x], [0,5], color='r') for x in discrete_space]
+    plt.show()
+
+def plot_moving_average(reward):
+    T = len(reward)
+    avg = np.zeros(T)
+    for t in range(T):
+        avg[t] = np.mean(reward[max(0, t-10):(t+1)])
+    plt.plot(avg)
+    plt.show()
