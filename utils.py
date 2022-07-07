@@ -24,7 +24,7 @@ def discretize_state(observation, discretization):
     theta_d = int(np.digitize(theta, discretization[4]))
     omega_d = int(np.digitize(omega, discretization[5]))
 
-    return (sx_d, sy_d, vx_d, vy_d, theta_d, omega_d, bo1, bo2)
+    return (sx_d, sy_d, vx_d, vy_d, theta_d, omega_d, int(bo1), int(bo2))
 
 # Other
 
@@ -34,14 +34,15 @@ def decay_function(episode, ep_min_decay):
     return max(min_epsilon, min(max_epsilon, 1.0 - 
                               math.log10((episode + 1) / (ep_min_decay*0.1))))
 
-def choose_action_eps_greedy(env, q_table, s, eps):
-    actions = [action for action in range(env.action_space.n)]
+def choose_action_eps_greedy(env, table_s_a, s, eps):
     if (np.random.random() <= eps):
         return env.action_space.sample() #Exploration
     else:
-        q_action_s = [q_table[s,i] for i in actions] 
-        return np.argmax(q_action_s) #Eplotation
-
+        actions = [action for action in range(env.action_space.n)]
+        table_s = [table_s_a[s,a] for a in actions]
+        table_s_argmax = np.argwhere(table_s == np.max(table_s))
+        table_s_argmax = table_s_argmax.reshape(len(table_s_argmax))
+        return np.random.choice(table_s_argmax)
 
 # PLOT functions
 

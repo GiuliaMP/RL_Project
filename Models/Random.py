@@ -1,4 +1,4 @@
-from utilities import *
+from utils import *
 
 def random(env, episodes, render=False):
     rew_list = []
