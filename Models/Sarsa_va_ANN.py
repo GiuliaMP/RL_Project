@@ -4,10 +4,6 @@ import torch
 import torch.nn as nn
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-input_dim=8     # how many Variables are in the dataset
-hidden_dim = 25 # hidden layers
-output_dim=1    # number of classes
-
 import torch.nn as nn
 class Net(nn.Module):
     def __init__(self,input,hidden_dim,output):
@@ -26,9 +22,8 @@ class Net(nn.Module):
         return x
 
     def train(self, epochs, input, target,  optimizer=torch.optim.Adam, lr=0.001, criterion=nn.functional.mse_loss):
-        input = torch.from_numpy(input)
-        input = input.clone().detach().requires_grad_(True)
-        target = torch.tensor(target, requires_grad=True)
+        #input = input.clone().detach().requires_grad_(True)
+        #target = torch.tensor(target, requires_grad=True)
         optimizer=optimizer(self.parameters(), lr=lr)
         loss_list = []
         for t in range(epochs):
@@ -49,7 +44,7 @@ def sarsa_va_ann(env, n_var, ep_min_decay, alpha, gamma, episodes, render=False)
     action_size = env.action_space.n 
     q_nn_approx = []
     for a in range(action_size):
-        net = Net(8,20,1)
+        net = Net(n_var,20,1)
         net.to(device)
         q_nn_approx.append(net)
 
@@ -62,19 +57,19 @@ def sarsa_va_ann(env, n_var, ep_min_decay, alpha, gamma, episodes, render=False)
         done = False
         s = env.reset() # seed = 42
         s = s.reshape(1,n_var)
-        q_value_approx = np.array([q_nn_approx[a](torch.tensor(s)).detach().numpy() for a in range(action_size)]).flatten()
+        q_value_approx = np.array([q_nn_approx[a](torch.tensor(s).to(device)).detach().cpu().numpy() for a in range(action_size)]).flatten()
         a = choose_action_eps_greedy_nn(env, q_value_approx, eps)  
         while not done:
             s_p, reward, done, _ = env.step(a)
             if render:
                 env.render()
             s_p = s_p.reshape(1, n_var)
-            q_value_approx = np.array([q_nn_approx[a](torch.tensor(s)).detach().numpy() for a in range(action_size)]).flatten()
-            q_value_approx_p = np.array([q_nn_approx[a](torch.from_numpy(s_p)).detach().numpy() for a in range(action_size)]).flatten()
+            q_value_approx = np.array([q_nn_approx[a](torch.tensor(s).to(device)).detach().cpu().numpy() for a in range(action_size)]).flatten()
+            q_value_approx_p = np.array([q_nn_approx[a](torch.tensor(s_p).to(device)).detach().cpu().numpy() for a in range(action_size)]).flatten()
             a_p = choose_action_eps_greedy_nn(env, q_value_approx_p, eps)
-            target = (reward + gamma * q_value_approx_p[a_p] - q_value_approx[a])
+            target = (reward + gamma * q_value_approx_p[a_p]) # - q_value_approx[a])
             target = np.array(target).reshape(1,1)
-            q_nn_approx[a].train(1, s, target)
+            q_nn_approx[a].train(1, torch.tensor(s, requires_grad=True).to(device), torch.tensor(target, requires_grad=True).to(device))
             s,a = s_p, a_p
             tot_ep_reward += reward
         tot_reward.append(tot_ep_reward)

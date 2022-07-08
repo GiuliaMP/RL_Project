@@ -44,6 +44,15 @@ def choose_action_eps_greedy(env, table_s_a, s, eps):
         table_s_argmax = table_s_argmax.reshape(len(table_s_argmax))
         return np.random.choice(table_s_argmax)
 
+def choose_action_eps_greedy_nn(env, q_value_approx, eps):
+    if (np.random.random() <= eps):
+        return env.action_space.sample() #Exploration
+    else:
+        q_value_s_argmax = np.argwhere(q_value_approx == np.max(q_value_approx))
+        q_value_s_argmax = q_value_s_argmax.reshape(len(q_value_s_argmax))
+        return np.random.choice(q_value_s_argmax)
+
+
 # PLOT functions
 
 def plot_space(discrete_space):
