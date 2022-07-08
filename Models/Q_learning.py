@@ -12,7 +12,6 @@ def q_learning(env, discretization, ep_min_decay, alpha, gamma, episodes, render
         done = False
         s = env.reset() # seed = 42
         s = discretize_state(s, discretization)
-        #s = discretize(5, s)
         i = 0
         while not done:
             a = choose_action_eps_greedy(env, q_table, s, eps)
@@ -20,8 +19,6 @@ def q_learning(env, discretization, ep_min_decay, alpha, gamma, episodes, render
             if render:
                 env.render()
             s_p = discretize_state(s_p, discretization)
-            #s_p = discretize(5, s_p)
-            a_p = choose_action_eps_greedy(env, q_table, s_p, eps)
             q_action_s_p = [q_table[s_p,i] for i in actions] 
             q_table[s,a] += alpha*(reward + gamma*(np.max(q_action_s_p)) - q_table[s,a])
             s = s_p
