@@ -1,4 +1,4 @@
-from Models.utils import *
+from utils import *
 import random
 import torch
 import torch.nn as nn
