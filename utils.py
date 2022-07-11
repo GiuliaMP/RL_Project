@@ -98,17 +98,19 @@ def show_video(env_name):
     else:
         print("Could not find video")
         
-def show_video_of_model(agent, env_name):
+def show_video_of_model(qnet, env_name):
     env = gym.make(env_name)
     vid = video_recorder.VideoRecorder(env, path="./{}.mp4".format(env_name))
-    agent.qnetwork_local.load_state_dict(torch.load('checkpoint.pth'))
+    qnet.load_state_dict(torch.load('checkpoint.pth'))
     state = env.reset()
     done = False
     while not done:
         frame = env.render(mode='rgb_array')
         vid.capture_frame()
-        
-        action = agent.act(state)
-
+        state = torch.from_numpy(state).float().unsqueeze(0) #.to(device)
+        qnet.eval()
+        with torch.no_grad():
+            q_values = qnet(state)
+        action = np.argmax(q_values.data.numpy())
         state, reward, done, _ = env.step(action)        
     env.close()
