@@ -1,6 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import random
+import gym
+import torch
+
+# For visualization
+from gym.wrappers.monitoring import video_recorder
+from IPython.display import HTML
+from IPython import display 
+import glob
+import base64, io
 
 # Discretization functions for lunar lander environment
 
@@ -44,14 +54,23 @@ def choose_action_eps_greedy(env, table_s_a, s, eps):
         table_s_argmax = table_s_argmax.reshape(len(table_s_argmax))
         return np.random.choice(table_s_argmax)
 
-def choose_action_eps_greedy_nn(env, q_value_approx, eps):
-    if (np.random.random() <= eps):
-        return env.action_space.sample() #Exploration
+def choose_action_eps_greedy_nn(env, q_values, eps):
+    if random.random() > eps:
+        return np.argmax(q_values)
     else:
-        q_value_s_argmax = np.argwhere(q_value_approx == np.max(q_value_approx))
-        q_value_s_argmax = q_value_s_argmax.reshape(len(q_value_s_argmax))
-        return np.random.choice(q_value_s_argmax)
+        return env.action_space.sample()
+    # if (np.random.random() <= eps):
+    #     return env.action_space.sample() #Exploration
+    # else:
+    #     q_value_s_argmax = np.argwhere(q_value_approx == np.max(q_value_approx))
+    #     q_value_s_argmax = q_value_s_argmax.reshape(len(q_value_s_argmax))
+    #     return np.random.choice(q_value_s_argmax)
 
+def choose_action_epsilon_greedy_dqn(env, q_values,eps):
+    if random.random() > eps:
+        return np.argmax(q_values.cpu().data.numpy())
+    else:
+        return env.action_space.sample()
 
 # PLOT functions
 
@@ -65,3 +84,31 @@ def moving_avg(reward, window=10):
     for t in range(T):
         avg[t] = np.mean(reward[max(0, t-window):(t+1)])
     return avg
+
+def show_video(env_name):
+    mp4list = glob.glob('./*.mp4')
+    if len(mp4list) > 0:
+        mp4 = './{}.mp4'.format(env_name)
+        video = io.open(mp4, 'r+b').read()
+        encoded = base64.b64encode(video)
+        display.display(HTML(data='''<video alt="test" autoplay 
+                loop controls style="height: 400px;">
+                <source src="data:video/mp4;base64,{0}" type="video/mp4" />
+             </video>'''.format(encoded.decode('ascii'))))
+    else:
+        print("Could not find video")
+        
+def show_video_of_model(agent, env_name):
+    env = gym.make(env_name)
+    vid = video_recorder.VideoRecorder(env, path="./{}.mp4".format(env_name))
+    agent.qnetwork_local.load_state_dict(torch.load('checkpoint.pth'))
+    state = env.reset()
+    done = False
+    while not done:
+        frame = env.render(mode='rgb_array')
+        vid.capture_frame()
+        
+        action = agent.act(state)
+
+        state, reward, done, _ = env.step(action)        
+    env.close()
