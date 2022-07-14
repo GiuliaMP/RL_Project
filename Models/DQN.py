@@ -3,13 +3,11 @@ import random
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import matplotlib.pyplot as plt
 
 import numpy as np
 from collections import deque, namedtuple
 
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = "cpu" # torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 BUFFER_SIZE = int(1e5)  # replay buffer size
 BATCH_SIZE = 64         # minibatch size
 GAMMA = 0.99            # discount factor
@@ -53,11 +51,18 @@ def soft_update(net, net_target, tau):
         target_param.data.copy_(tau*param.data + (1.0-tau)*target_param.data)
 
 def train_model(model, inputs, y_targets, actions, optimizer, loss=nn.functional.mse_loss):
-        y_pred = model(inputs).gather(1, actions)
+        model.train()
+        y_pred = model(inputs).gather(1, actions) # selects y_pred correspondent to action of y_target
         loss = loss(y_pred, y_targets)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
+def predict(model, inputs):
+    model.eval()
+    with torch.no_grad():
+        out = model(inputs)
+    return out
 
 class ReplayBuffer:
     def __init__(self, action_size, buffer_size, batch_size, seed):
@@ -86,17 +91,18 @@ class ReplayBuffer:
         return len(self.memory)
 
 
-def dqn(env, state_size, episodes=2000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
+def dqn(env, state_size, episodes=5000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
     total_reward = []                       
     reward_window = deque(maxlen=100)  # last 100 reward
-    eps = eps_start             
+    eps = eps_start     
+    already_solved = False        
 
     action_size = env.action_space.n 
     seed = 0
-    qnet = QNet(state_size, action_size, seed).to(device)
-    qnet_target = QNet(state_size, action_size, seed).to(device)
-    optimizer = optim.Adam(qnet.parameters(), lr=LR)
+    q_net = QNet(state_size, action_size, seed).to(device)
+    q_net_target = QNet(state_size, action_size, seed).to(device)
+    optimizer = optim.Adam(q_net.parameters(), lr=LR)
 
     memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed)
     step = 0
@@ -107,10 +113,7 @@ def dqn(env, state_size, episodes=2000, max_t=1000, eps_start=1.0, eps_end=0.01,
         done = False
         while not done:
             state = torch.from_numpy(state).float().unsqueeze(0).to(device)
-            qnet.eval()
-            with torch.no_grad():
-                q_values = qnet(state)
-            qnet.train()
+            q_values = predict(q_net, state)
             action = choose_action_epsilon_greedy_dqn(env, q_values,eps)
             state_prime, reward, done, _ = env.step(action)
 
@@ -121,34 +124,27 @@ def dqn(env, state_size, episodes=2000, max_t=1000, eps_start=1.0, eps_end=0.01,
                 if len(memory) > BATCH_SIZE:
                     transitions = memory.sample()
                     states, actions, rewards, states_prime, dones = transitions
-                    q_values_prime = qnet_target(states_prime).detach().max(1)[0].unsqueeze(1)
-                    q_values = rewards + GAMMA * q_values_prime * (1 - dones)
-                    train_model(qnet, states, q_values, actions, optimizer, loss=masked_huber_loss(0.0,1.0))
-                    soft_update(qnet, qnet_target, TAU)   
+                    q_values_prime = predict(q_net_target,states_prime).detach().max(1)[0].unsqueeze(1) # return Qmax for each state_prime
+                    q_values_max = rewards + GAMMA * q_values_prime * (1 - dones) # target q_values_max, 1 for each state
+                    train_model(q_net, states, q_values_max, actions, optimizer, loss=masked_huber_loss(0.0,1.0))
+                    soft_update(q_net, q_net_target, TAU)   
 
             state = state_prime
             episode_reward += reward
 
-        # Screenshot utilities
-        reward_window.append(episode_reward)
-        total_reward.append(episode_reward)     
         eps = max(eps_end, eps_decay*eps)
+
+        total_reward.append(episode_reward)   
+        reward_window.append(episode_reward)  
+
+        # Print utilities
         print('\rEpisode {}\tAverage Reward: {:.2f}'.format(episode, np.mean(reward_window)), end="")
         if episode % 100 == 0:
             print('\rEpisode {}\tAverage Reward: {:.2f}'.format(episode, np.mean(reward_window)))
-            try:
-                f0 = plt.figure()
-                avg_total_reward = moving_avg(total_reward, window=100)
-                plt.plot(total_reward, 'b', label='Reward')
-                plt.plot(avg_total_reward, 'r', label='Average reward (100 episodes)')
-                plt.legend()
-                plt.title(f'Reward until episode {episode}')
-                #plt.show()
-                f0.savefig(f'reward_until_{episode}.jpg')
-            except:
-                print(f'No plot produced at episode {episode}.')
+            # torch.save(qnet.state_dict(), f'checkpoint_{episode}.pth')
         if np.mean(reward_window)>=200.0:
-            print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode-100, np.mean(reward_window)))
-            torch.save(qnet.state_dict(), 'checkpoint.pth')
-
+            if not already_solved:
+                print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode-100, np.mean(reward_window)))
+                already_solved = True
+            torch.save(q_net.state_dict(), 'checkpoint_DQN.pth')
     return total_reward

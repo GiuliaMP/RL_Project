@@ -64,12 +64,12 @@ def q_learning_ANN(env, state_size, episodes=2000, eps_start=1.0, eps_end=0.01, 
         state = env.reset()
         state = torch.from_numpy(state).float().unsqueeze(0).to(device)
         while not done:
-            q_values_approx = np.array([predict(q_nets[a],state).detach().cpu().numpy() for a in range(action_size)]).flatten()
-            action = choose_action_eps_greedy_nn(env, q_values_approx, eps)
+            q_values = np.array([predict(q_nets[a],state).detach().cpu().numpy() for a in range(action_size)]).flatten()
+            action = choose_action_eps_greedy_nn(env, q_values, eps)
             state_prime, reward, done, _ = env.step(action)
             state_prime = torch.from_numpy(state_prime).float().unsqueeze(0).to(device)
-            q_values_approx_prime = np.array([predict(q_nets[a],state_prime).detach().cpu().numpy() for a in range(action_size)]).flatten()
-            q_values_target = np.array([reward + GAMMA * np.max(q_values_approx_prime) * (1 - done)])
+            q_values_prime = np.array([predict(q_nets[a],state_prime).detach().cpu().numpy() for a in range(action_size)]).flatten()
+            q_values_target = np.array([reward + GAMMA * np.max(q_values_prime) * (1 - done)])
             q_values_target = torch.from_numpy(q_values_target).float().unsqueeze(0).to(device)
             train_model(q_nets[action], state, q_values_target, optimizer)
 
