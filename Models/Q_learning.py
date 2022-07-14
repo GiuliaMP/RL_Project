@@ -1,7 +1,9 @@
 from utils import *
 import collections
+from collections import deque
 
 def q_learning(env, discretization, episode_min_decay, alpha, gamma, episodes, render=False):
+    reward_window = deque(maxlen=100)  # last 100 reward
     actions = [action for action in range(env.action_space.n)]
     total_reward = []
     q_table = collections.defaultdict(float)
@@ -23,5 +25,14 @@ def q_learning(env, discretization, episode_min_decay, alpha, gamma, episodes, r
             state = state_prime
             episode_reward += reward
         total_reward.append(episode_reward)
+        reward_window.append(episode_reward) 
+
+        # Print utilities
+        print('\rEpisode {}\tAverage Reward: {:.2f}'.format(episode, np.mean(reward_window)), end="")
+        if np.mean(reward_window)>=200.0:
+            if not already_solved:
+                print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode-100, np.mean(reward_window)))
+                already_solved = True
+
     env.close()
     return total_reward

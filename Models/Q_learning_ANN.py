@@ -90,4 +90,5 @@ def q_learning_ANN(env, state_size, episodes=2000, eps_start=1.0, eps_end=0.01, 
                 print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode-100, np.mean(reward_window)))
                 already_solved = True
    
+    env.close()
     return total_reward

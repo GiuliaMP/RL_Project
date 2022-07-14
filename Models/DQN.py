@@ -147,4 +147,5 @@ def dqn(env, state_size, episodes=5000, max_t=1000, eps_start=1.0, eps_end=0.01,
                 print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode-100, np.mean(reward_window)))
                 already_solved = True
             torch.save(q_net.state_dict(), 'checkpoint_DQN.pth')
+    env.close()
     return total_reward
