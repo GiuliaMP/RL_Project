@@ -1,18 +1,16 @@
 from utils import *
 
 def random(env, episodes, render=False):
-    rew_list = []
-    for _ in range(episodes):
-        observation = env.reset()
+    total_reward = []
+    for episode in range(episodes):
+        state = env.reset()
         done = False
-        tot_rew = 0
+        episode_reward = 0
         while not done:
-            observation, reward, done, info = env.step(env.action_space.sample())
-            tot_rew += reward
-            if render:
+            state, reward, done, _ = env.step(env.action_space.sample())
+            episode_reward += reward
+            if render and (episodes - episode) < 10:
                 env.render()
-        rew_list.append(tot_rew)
-
+        total_reward.append(episode_reward)
     env.close()
-
-    return rew_list
+    return total_reward
