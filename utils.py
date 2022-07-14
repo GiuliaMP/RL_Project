@@ -12,7 +12,6 @@ from IPython import display
 import glob
 import base64, io
 
-# Discretization functions for lunar lander environment
 
 def discretize_space_non_uniform(min_lim, min_centre, max_centre, max_lim, n_bins):
     space = np.zeros((n_bins-1))
@@ -36,18 +35,16 @@ def discretize_state(observation, discretization):
 
     return (sx_d, sy_d, vx_d, vy_d, theta_d, omega_d, int(bo1), int(bo2))
 
-# Other
-
-def decay_function(episode, ep_min_decay):
+def decay_function(episode, episode_min_decay):
     min_epsilon = 0.01
     max_epsilon = 1.0
     return max(min_epsilon, min(max_epsilon, 1.0 - 
-                              math.log10((episode + 1) / (ep_min_decay*0.1))))
+                              math.log10((episode + 1) / (episode_min_decay*0.1))))
 
 def choose_action_eps_greedy(env, table_s_a, s, eps):
-    if (np.random.random() <= eps):
-        return env.action_space.sample() #Exploration
-    else:
+    if (np.random.random() <= eps): #Exploration
+        return env.action_space.sample() 
+    else: # Exploitation
         actions = [action for action in range(env.action_space.n)]
         table_s = [table_s_a[s,a] for a in actions]
         table_s_argmax = np.argwhere(table_s == np.max(table_s))
@@ -59,12 +56,6 @@ def choose_action_eps_greedy_nn(env, q_values, eps):
         return np.argmax(q_values)
     else:
         return env.action_space.sample()
-    # if (np.random.random() <= eps):
-    #     return env.action_space.sample() #Exploration
-    # else:
-    #     q_value_s_argmax = np.argwhere(q_value_approx == np.max(q_value_approx))
-    #     q_value_s_argmax = q_value_s_argmax.reshape(len(q_value_s_argmax))
-    #     return np.random.choice(q_value_s_argmax)
 
 def choose_action_epsilon_greedy_dqn(env, q_values,eps):
     if random.random() > eps:
@@ -107,7 +98,7 @@ def show_video_of_model(qnet, env_name):
     while not done:
         frame = env.render(mode='rgb_array')
         vid.capture_frame()
-        state = torch.from_numpy(state).float().unsqueeze(0) #.to(device)
+        state = torch.from_numpy(state).float().unsqueeze(0)
         qnet.eval()
         with torch.no_grad():
             q_values = qnet(state)
