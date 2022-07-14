@@ -1,28 +1,26 @@
 from utils import *
 import collections
 
-def sarsa(env, discretization, ep_min_decay, alpha, gamma, episodes, render=False):
-    tot_reward = []
+def sarsa(env, discretization, episode_min_decay, alpha, gamma, episodes, render=False):
+    total_reward = []
     q_table = collections.defaultdict(float)
-    eps_list = []
-    for ep in range(episodes):
-        eps = decay_function(ep, ep_min_decay)
-        eps_list.append(eps)
-        tot_ep_reward = 0
+    for episode in range(episodes):
+        eps = decay_function(episode, episode_min_decay)
+        episode_reward = 0
         done = False
-        s = env.reset()
-        s = discretize_state(s, discretization)
-        a = choose_action_eps_greedy(env, q_table, s, eps)
+        state = env.reset()
+        state = discretize_state(state, discretization)
+        action = choose_action_eps_greedy(env, q_table, state, eps)
         while not done:
-            s_p, reward, done, _ = env.step(a)
-            if render:
+            state_prime, reward, done, _ = env.step(action)
+            if render and (episodes - episode) < 10:
                 env.render()
-            s_p = discretize_state(s_p, discretization)
-            a_p = choose_action_eps_greedy(env, q_table, s_p, eps)
-            q_table[s,a] += alpha*(reward + gamma*q_table[s_p,a_p] - q_table[s,a])
-            s, a = s_p, a_p
-            tot_ep_reward += reward
-        tot_reward.append(tot_ep_reward)
+            state_prime = discretize_state(state_prime, discretization)
+            action_prime = choose_action_eps_greedy(env, q_table, state_prime, eps)
+            delta_q = (reward + gamma*q_table[state_prime,action_prime] - q_table[state,action])
+            q_table[state,action] += alpha*delta_q
+            state, action = state_prime, action_prime
+            episode_reward += reward
+        total_reward.append(episode_reward)
     env.close()
-    plt.plot(eps_list)
-    return tot_reward
+    return total_reward
