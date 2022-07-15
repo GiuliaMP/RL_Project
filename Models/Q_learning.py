@@ -2,13 +2,15 @@ from utils import *
 import collections
 from collections import deque
 
-def q_learning(env, discretization, episode_min_decay, alpha, gamma, episodes, render=False):
+#def q_learning(env, discretization, episode_min_decay, alpha, gamma, episodes, render=False):
+def q_learning(env, discretization, alpha, gamma, episodes, render=False, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
     reward_window = deque(maxlen=100)  # last 100 reward
     actions = [action for action in range(env.action_space.n)]
     total_reward = []
     q_table = collections.defaultdict(float)
+    eps = eps_start  
     for episode in range(episodes):
-        eps = decay_function(episode, episode_min_decay)
+        # eps = decay_function(episode, episode_min_decay)
         episode_reward = 0
         done = False
         state = env.reset()
@@ -24,6 +26,9 @@ def q_learning(env, discretization, episode_min_decay, alpha, gamma, episodes, r
             q_table[state,action] += alpha*delta_q
             state = state_prime
             episode_reward += reward
+        
+        eps = max(eps_end, eps_decay*eps)
+        
         total_reward.append(episode_reward)
         reward_window.append(episode_reward) 
 

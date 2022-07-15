@@ -91,11 +91,11 @@ class ReplayBuffer:
         return len(self.memory)
 
 
-def dqn(env, state_size, episodes=5000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
+def dqn(env, state_size, episodes=5000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
 
     total_reward = []                       
     reward_window = deque(maxlen=100)  # last 100 reward
-    eps = eps_start     
+    eps = eps_start   
     already_solved = False        
 
     action_size = env.action_space.n 
