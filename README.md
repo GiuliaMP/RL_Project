@@ -6,7 +6,9 @@ Folder for the project of the RL course
 
 ______________________________
 
-The project tackles the problem of the "LunarLander-v2" (https://www.gymlibrary.ml/environments/box2d/lunar_lander/), an environment of OpenAI gym. The **goal** is to land a shuttle on the moon.
+The project tackles the problem of the "LunarLander-v2", an environment of OpenAI gym (https://www.gymlibrary.ml/environments/box2d/lunar_lander/). 
+
+The **goal** is to land a shuttle on the moon.
 
 ## RL approaches
 
