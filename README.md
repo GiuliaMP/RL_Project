@@ -11,7 +11,7 @@ The project tackles the problem of the "LunarLander-v2", an environment of OpenA
 ## RL approaches
 
 - TD-methods with discretization
-- Q-learning with function approximation
+- SARSA with function approximation
 - DQN
 
 ## Problem description
