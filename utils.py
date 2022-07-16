@@ -11,6 +11,7 @@ from IPython.display import HTML
 from IPython import display 
 import glob
 import base64, io
+from matplotlib.colors import ListedColormap
 
 
 def discretize_space_non_uniform(min_lim, min_centre, max_centre, max_lim, n_bins):
@@ -105,3 +106,31 @@ def show_video_of_model(qnet, env_name):
         action = np.argmax(q_values.data.numpy())
         state, reward, done, _ = env.step(action)        
     env.close()
+
+def policy_visualization_dqn(qnet, vx, vy, theta, omega, bol0, bol1, x_grid, y_grid):
+    states = torch.empty(0, dtype=torch.float32)
+    [X,Y] = np.meshgrid(x_grid,y_grid)
+    for y in y_grid:
+        for x in x_grid:
+            states = torch.cat((states, torch.tensor([[x,y,vx,vy,theta,omega, bol0, bol1]])))
+        states = states.type(torch.float32)
+    with torch.no_grad():
+        qnet.eval()
+        q_values = qnet(states)
+    q_values.shape
+    x_policy = torch.argmax(q_values,1).cpu().numpy()
+    x_policy = x_policy.reshape((len(y_grid),len(x_grid)))
+
+    col_dict={0:'#d9459e', 1:'#e0d1f9', 2:'#9966ea', 3:'#ffdb63'}
+    cm = ListedColormap([col_dict[x] for x in col_dict.keys()])
+    labels = np.array(["Action 0: do nothing","Action 1: fire right (go left)","Action 2: fire main","Action 3: fire left (go right)"])
+    ax, fig = plt.subplots(figsize=(12,8))
+    plt.pcolor(X,Y,x_policy, cmap=cm)
+    cbar = plt.colorbar()
+    step = (cbar.vmax-cbar.vmin)/8
+    cbar.set_ticks([cbar.vmin+step,cbar.vmin+step*3,cbar.vmin+step*5,cbar.vmin+step*7])
+    cbar.set_ticklabels(labels)
+    plt.title(f'vx={vx}, vy={vy}, theta={theta}, omega={omega}, bol0={bol0}, bol1={bol1}\n')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.show()
