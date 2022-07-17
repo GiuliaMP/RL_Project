@@ -39,9 +39,6 @@ def predict(model, inputs):
         out = model(inputs)
     return out
 
-# # Plot the loss
-# step = np.linspace(0,1000,1000)
-# plt.plot(step,np.array(loss_list))
 
 def sarsa_va_ann(env, state_size, episodes=2000, eps_start=1.0, eps_end=0.01, eps_decay=0.995):
     total_reward = []                       
@@ -69,9 +66,9 @@ def sarsa_va_ann(env, state_size, episodes=2000, eps_start=1.0, eps_end=0.01, ep
             state_prime = torch.from_numpy(state_prime).float().unsqueeze(0).to(device)
             q_values_prime = np.array([predict(q_nets[a],state_prime).detach().cpu().numpy() for a in range(action_size)]).flatten()
             action_prime = choose_action_eps_greedy_nn(env, q_values_prime, eps)
-            q_values_target = np.array([reward + GAMMA * q_values_prime[action_prime] * (1 - done)])
-            q_values_target = torch.from_numpy(q_values_target).float().unsqueeze(0).to(device)
-            train_model(q_nets[action], state, q_values_target, optimizer)
+            q_value_target = np.array([reward + GAMMA * q_values_prime[action_prime] * (1 - done)])
+            q_value_target = torch.from_numpy(q_value_target).float().unsqueeze(0).to(device)
+            train_model(q_nets[action], state, q_value_target, optimizer)
             state, action = state_prime, action_prime
             episode_reward += reward
         
