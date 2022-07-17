@@ -25,8 +25,7 @@ The lander starts at the top center of the viewport with a random initial force 
 
 **Termination**
 1. The lander crashes (the lander body gets in contact with the moon);
-2. The lander gets outside of the viewport (x coordinate is greater than 1);
-3. The lander is not awake, i.e. it doesn’t move and doesn’t collide with any other body.
+2. The lander gets outside of the viewport.
 
 ### States and actions
 **States** - continuous
