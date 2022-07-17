@@ -9,7 +9,6 @@ device = "cpu" # torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 GAMMA = 0.99            # discount factor
 LR = 5e-4               # learning rate 
 
-import torch.nn as nn
 class Net(nn.Module):
     def __init__(self, input_size, output_size, seed):
         super(Net, self).__init__()
