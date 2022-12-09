@@ -50,7 +50,7 @@ The lander starts at the top center of the viewport with a random initial force 
 **Negative** reward when:
 - Moving away from the landing pad;
 - Lander crashes (-100 points);
-- Fire main engine ($-0.3$ points), fire left/right engine ($-0.03$ points).
+- Fire main engine (-0.3 points), fire left/right engine (-0.03 points).
 
 The game is considered solved with **200** points.
 
